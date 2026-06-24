@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.eclipse.launcher.ui.home.HomeScreen
 import com.eclipse.launcher.ui.theme.EclipseLauncherTheme
+import com.eclipse.launcher.ui.wallpaper.WallpaperScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -27,7 +28,18 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     NavHost(navController = navController, startDestination = "home") {
                         composable("home") {
-                            HomeScreen()
+                            HomeScreen(
+                                onNavigateToWallpaper = {
+                                    navController.navigate("wallpaper")
+                                }
+                            )
+                        }
+                        composable("wallpaper") {
+                            WallpaperScreen(
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                }
+                            )
                         }
                     }
                 }

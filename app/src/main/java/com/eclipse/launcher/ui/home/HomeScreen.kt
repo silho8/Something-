@@ -1,8 +1,10 @@
 package com.eclipse.launcher.ui.home
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
@@ -22,16 +24,21 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.rememberAsyncImagePainter
 import com.eclipse.launcher.presentation.viewmodel.HomeScreenViewModel
 import com.eclipse.launcher.ui.drawer.AppDrawer
 import com.eclipse.launcher.ui.home.components.GridEngine
 import kotlinx.coroutines.launch
+import java.io.File
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    onNavigateToWallpaper: () -> Unit,
     viewModel: HomeScreenViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -56,38 +63,49 @@ fun HomeScreen(
         sheetContent = {
             AppDrawer()
         },
-        sheetPeekHeight = 0.dp, // Fully hidden until swiped up
+        sheetPeekHeight = 0.dp,
         sheetContainerColor = Color.Transparent,
         sheetDragHandle = null,
-        containerColor = Color.Black // AMOLED black UI
+        containerColor = Color.Black
     ) { paddingValues ->
         DragDropProvider {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.Black)
-                    // Detect vertical swipe to open the app drawer
-                    .draggable(
-                        orientation = Orientation.Vertical,
-                        state = rememberDraggableState { delta ->
-                            // Optional: handle partial dragging if needed
-                        },
-                        onDragStopped = { velocity ->
-                            if (velocity < -500f) { // Swipe up
-                                scope.launch {
-                                    bottomSheetState.expand()
-                                }
-                            } else if (velocity > 500f) { // Swipe down
-                                scope.launch {
-                                    bottomSheetState.hide()
-                                }
-                            }
-                        }
-                    )
             ) {
+                // Render Wallpaper Background
+                if (state.wallpaperPath != null) {
+                    Image(
+                        painter = rememberAsyncImagePainter(File(state.wallpaperPath!!)),
+                        contentDescription = "Custom Wallpaper",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+
                 HorizontalPager(
                     state = pagerState,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pointerInput(Unit) {
+                            detectTapGestures(
+                                onLongPress = {
+                                    onNavigateToWallpaper()
+                                }
+                            )
+                        }
+                        .draggable(
+                            orientation = Orientation.Vertical,
+                            state = rememberDraggableState { delta -> },
+                            onDragStopped = { velocity ->
+                                if (velocity < -500f) {
+                                    scope.launch { bottomSheetState.expand() }
+                                } else if (velocity > 500f) {
+                                    scope.launch { bottomSheetState.hide() }
+                                }
+                            }
+                        )
                 ) { page ->
                     val itemsOnPage = state.pages[page] ?: emptyList()
 

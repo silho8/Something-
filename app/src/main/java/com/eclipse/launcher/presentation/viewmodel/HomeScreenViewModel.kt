@@ -33,18 +33,25 @@ class HomeScreenViewModel @Inject constructor(
 
     init {
         loadHomeData()
+        observeWallpaper()
+    }
+
+    private fun observeWallpaper() {
+        viewModelScope.launch {
+            homePreferences.getWallpaperPath().collect { path ->
+                _state.update { it.copy(wallpaperPath = path) }
+            }
+        }
     }
 
     private fun loadHomeData() {
         viewModelScope.launch {
-            // Using alphabetical sorting by default
             val installedApps = installedAppsManager.getInstalledApps(AppSortType.ALPHABETICAL_ASC)
             val savedState = homePreferences.getSavedGridState().first()
 
             val finalItems = mutableListOf<LauncherItem>()
 
             if (savedState.isEmpty()) {
-                // First launch: Auto-place apps sequentially
                 installedApps.forEachIndexed { index, app ->
                     val page = index / itemsPerPage
                     val row = (index % itemsPerPage) / columns
@@ -52,7 +59,6 @@ class HomeScreenViewModel @Inject constructor(
                     finalItems.add(app.copy(position = GridPosition(page, row, column)))
                 }
             } else {
-                // Restore saved layout
                 savedState.forEach { savedItem ->
                     if (savedItem.isFolder) {
                         val folderApps = savedItem.folderContents?.mapNotNull { id ->
@@ -76,7 +82,6 @@ class HomeScreenViewModel @Inject constructor(
                     }
                 }
 
-                // Add any newly installed apps that aren't in the saved state
                 val savedAppIds = savedState.flatMap { if (it.isFolder) it.folderContents ?: emptyList() else listOf(it.id) }.toSet()
                 var nextEmpty = findNextEmptyCell(finalItems)
                 installedApps.filter { it.id !in savedAppIds }.forEach { newApp ->
@@ -85,10 +90,7 @@ class HomeScreenViewModel @Inject constructor(
                 }
             }
 
-            // Calculate total pages
             val maxPage = finalItems.maxOfOrNull { it.position.page } ?: 0
-
-            // Group by page
             val pagesMap = finalItems.groupBy { it.position.page }
 
             _state.update {
@@ -117,7 +119,6 @@ class HomeScreenViewModel @Inject constructor(
 
     fun onItemMoved(item: LauncherItem, newPosition: GridPosition) {
         val currentItems = _state.value.pages.values.flatten().toMutableList()
-
         val targetItem = currentItems.find { it.position == newPosition }
 
         if (targetItem != null && targetItem.id != item.id) {

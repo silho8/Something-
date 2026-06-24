@@ -22,11 +22,9 @@ class HomePreferences @Inject constructor(@ApplicationContext private val contex
 
     companion object {
         val GRID_STATE_KEY = stringPreferencesKey("grid_state")
+        val WALLPAPER_PATH_KEY = stringPreferencesKey("wallpaper_path")
     }
 
-    // A simplified representation to save app placements.
-    // In production we would save more complex layout definitions,
-    // but here we map id -> GridPosition for simplicity
     data class SavedItemPosition(
         val id: String,
         val page: Int,
@@ -34,7 +32,7 @@ class HomePreferences @Inject constructor(@ApplicationContext private val contex
         val column: Int,
         val isFolder: Boolean = false,
         val folderName: String? = null,
-        val folderContents: List<String>? = null // App IDs in folder
+        val folderContents: List<String>? = null
     )
 
     fun getSavedGridState(): Flow<List<SavedItemPosition>> = context.homeDataStore.data.map { preferences ->
@@ -70,6 +68,16 @@ class HomePreferences @Inject constructor(@ApplicationContext private val contex
         val json = gson.toJson(savedItems)
         context.homeDataStore.edit { preferences ->
             preferences[GRID_STATE_KEY] = json
+        }
+    }
+
+    fun getWallpaperPath(): Flow<String?> = context.homeDataStore.data.map { preferences ->
+        preferences[WALLPAPER_PATH_KEY]
+    }
+
+    suspend fun saveWallpaperPath(path: String) {
+        context.homeDataStore.edit { preferences ->
+            preferences[WALLPAPER_PATH_KEY] = path
         }
     }
 }
