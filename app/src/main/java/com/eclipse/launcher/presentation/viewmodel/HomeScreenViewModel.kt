@@ -55,10 +55,8 @@ class HomeScreenViewModel @Inject constructor(
 
             // Load Dock First
             if (savedDockState.isEmpty()) {
-                // Pre-fill dock with up to 5 apps
                 val defaultDockApps = installedApps.take(5)
                 defaultDockApps.forEachIndexed { index, app ->
-                    // Position row = -2 denotes a dock item
                     finalDockItems.add(app.copy(position = GridPosition(page = 0, row = -2, column = index)))
                 }
             } else {
@@ -93,9 +91,12 @@ class HomeScreenViewModel @Inject constructor(
                 // Auto-place apps not in dock
                 val gridApps = installedApps.filter { it.id !in dockIds }
                 gridApps.forEachIndexed { index, app ->
-                    val page = index / itemsPerPage
-                    val row = (index % itemsPerPage) / columns
-                    val column = (index % itemsPerPage) % columns
+                    // Page 0 rows 0 and 1 are reserved for the Clock Widget
+                    val adjustedIndex = index + (columns * 2)
+
+                    val page = adjustedIndex / itemsPerPage
+                    val row = (adjustedIndex % itemsPerPage) / columns
+                    val column = (adjustedIndex % itemsPerPage) % columns
                     finalItems.add(app.copy(position = GridPosition(page, row, column)))
                 }
             } else {
@@ -122,7 +123,6 @@ class HomeScreenViewModel @Inject constructor(
                     }
                 }
 
-                // Add any newly installed apps that aren't in the saved state or dock
                 val savedAppIds = savedState.flatMap { if (it.isFolder) it.folderContents ?: emptyList() else listOf(it.id) }.toSet()
                 var nextEmpty = findNextEmptyCell(finalItems)
                 installedApps.filter { it.id !in savedAppIds && it.id !in dockIds }.forEach { newApp ->
@@ -149,6 +149,9 @@ class HomeScreenViewModel @Inject constructor(
         val maxPage = currentItems.maxOfOrNull { it.position.page } ?: 0
         for (page in 0..maxPage + 1) {
             for (row in 0 until rows) {
+                // Reserve rows 0 and 1 on page 0 for Clock Widget
+                if (page == 0 && row < 2) continue
+
                 for (col in 0 until columns) {
                     if (currentItems.none { it.position.page == page && it.position.row == row && it.position.column == col }) {
                         return GridPosition(page, row, col)
@@ -156,14 +159,16 @@ class HomeScreenViewModel @Inject constructor(
                 }
             }
         }
-        return GridPosition(0, 0, 0)
+        return GridPosition(maxPage + 1, 0, 0)
     }
 
     fun onItemMoved(item: LauncherItem, newPosition: GridPosition) {
+        // Prevent dropping onto the Clock Widget area on page 0
+        if (newPosition.page == 0 && newPosition.row < 2) return
+
         val currentGridItems = _state.value.pages.values.flatten().toMutableList()
         val currentDockItems = _state.value.dockItems.toMutableList()
 
-        // Remove item from wherever it was
         currentGridItems.removeIf { it.id == item.id }
         currentDockItems.removeIf { it.id == item.id }
 
@@ -187,14 +192,11 @@ class HomeScreenViewModel @Inject constructor(
                 )
                 targetList.add(newFolder)
             } else {
-                // Invalid merge
                 targetList.add(item)
                 targetList.add(targetItem)
             }
         } else {
-            // Check dock bounds
             if (isTargetingDock && currentDockItems.size >= 5 && targetItem == null) {
-                // Dock full, bounce back to grid
                 currentGridItems.add(item)
             } else {
                 val updatedItem = when (item) {

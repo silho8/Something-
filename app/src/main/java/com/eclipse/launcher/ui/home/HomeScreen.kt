@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
@@ -36,6 +37,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.eclipse.launcher.presentation.viewmodel.HomeScreenViewModel
 import com.eclipse.launcher.ui.drawer.AppDrawer
+import com.eclipse.launcher.ui.home.components.ClockWidget
 import com.eclipse.launcher.ui.home.components.FloatingDock
 import com.eclipse.launcher.ui.home.components.GridEngine
 import kotlinx.coroutines.launch
@@ -116,20 +118,33 @@ fun HomeScreen(
                         state = pagerState,
                         modifier = Modifier.weight(1f)
                     ) { page ->
-                        val itemsOnPage = state.pages[page] ?: emptyList()
-
-                        GridEngine(
-                            page = page,
-                            items = itemsOnPage,
-                            columns = 5,
-                            rows = 6,
-                            onItemDropped = { item, position ->
-                                viewModel.onItemMoved(item, position)
-                            },
-                            onAppClick = { packageName ->
-                                viewModel.launchApp(packageName)
+                        Box(modifier = Modifier.fillMaxSize()) {
+                            // Render the static Clock Widget at the top of the first page
+                            if (page == 0) {
+                                ClockWidget(
+                                    modifier = Modifier
+                                        .align(Alignment.TopCenter)
+                                        .padding(horizontal = 16.dp, vertical = 24.dp)
+                                        // The height corresponds roughly to the first 2 rows of the grid
+                                        .height(160.dp)
+                                )
                             }
-                        )
+
+                            val itemsOnPage = state.pages[page] ?: emptyList()
+
+                            GridEngine(
+                                page = page,
+                                items = itemsOnPage,
+                                columns = 5,
+                                rows = 6,
+                                onItemDropped = { item, position ->
+                                    viewModel.onItemMoved(item, position)
+                                },
+                                onAppClick = { packageName ->
+                                    viewModel.launchApp(packageName)
+                                }
+                            )
+                        }
                     }
 
                     // Floating Dock overlay at the bottom
