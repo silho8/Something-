@@ -48,11 +48,51 @@ class HomeScreenViewModel @Inject constructor(
         viewModelScope.launch {
             val installedApps = installedAppsManager.getInstalledApps(AppSortType.ALPHABETICAL_ASC)
             val savedState = homePreferences.getSavedGridState().first()
+            val savedDockState = homePreferences.getSavedDockState().first()
 
             val finalItems = mutableListOf<LauncherItem>()
+            val finalDockItems = mutableListOf<LauncherItem>()
+
+            // Load Dock First
+            if (savedDockState.isEmpty()) {
+                // Pre-fill dock with up to 5 apps
+                val defaultDockApps = installedApps.take(5)
+                defaultDockApps.forEachIndexed { index, app ->
+                    // Position row = -2 denotes a dock item
+                    finalDockItems.add(app.copy(position = GridPosition(page = 0, row = -2, column = index)))
+                }
+            } else {
+                savedDockState.forEach { savedItem ->
+                    if (savedItem.isFolder) {
+                        val folderApps = savedItem.folderContents?.mapNotNull { id ->
+                            installedApps.find { it.id == id }
+                        } ?: emptyList()
+
+                        if (folderApps.isNotEmpty()) {
+                            finalDockItems.add(
+                                LauncherItem.FolderItem(
+                                    id = savedItem.id,
+                                    name = savedItem.folderName ?: "Folder",
+                                    apps = folderApps,
+                                    position = GridPosition(savedItem.page, savedItem.row, savedItem.column)
+                                )
+                            )
+                        }
+                    } else {
+                        installedApps.find { it.id == savedItem.id }?.let {
+                            finalDockItems.add(it.copy(position = GridPosition(savedItem.page, savedItem.row, savedItem.column)))
+                        }
+                    }
+                }
+            }
+
+            // Load Grid
+            val dockIds = finalDockItems.flatMap { if (it is LauncherItem.FolderItem) it.apps.map { a -> a.id } else listOf(it.id) }.toSet()
 
             if (savedState.isEmpty()) {
-                installedApps.forEachIndexed { index, app ->
+                // Auto-place apps not in dock
+                val gridApps = installedApps.filter { it.id !in dockIds }
+                gridApps.forEachIndexed { index, app ->
                     val page = index / itemsPerPage
                     val row = (index % itemsPerPage) / columns
                     val column = (index % itemsPerPage) % columns
@@ -82,9 +122,10 @@ class HomeScreenViewModel @Inject constructor(
                     }
                 }
 
+                // Add any newly installed apps that aren't in the saved state or dock
                 val savedAppIds = savedState.flatMap { if (it.isFolder) it.folderContents ?: emptyList() else listOf(it.id) }.toSet()
                 var nextEmpty = findNextEmptyCell(finalItems)
-                installedApps.filter { it.id !in savedAppIds }.forEach { newApp ->
+                installedApps.filter { it.id !in savedAppIds && it.id !in dockIds }.forEach { newApp ->
                     finalItems.add(newApp.copy(position = nextEmpty))
                     nextEmpty = findNextEmptyCell(finalItems + newApp.copy(position = nextEmpty))
                 }
@@ -97,7 +138,8 @@ class HomeScreenViewModel @Inject constructor(
                 it.copy(
                     isLoading = false,
                     pages = pagesMap,
-                    totalPages = maxPage + 1
+                    totalPages = maxPage + 1,
+                    dockItems = finalDockItems
                 )
             }
         }
@@ -118,16 +160,24 @@ class HomeScreenViewModel @Inject constructor(
     }
 
     fun onItemMoved(item: LauncherItem, newPosition: GridPosition) {
-        val currentItems = _state.value.pages.values.flatten().toMutableList()
-        val targetItem = currentItems.find { it.position == newPosition }
+        val currentGridItems = _state.value.pages.values.flatten().toMutableList()
+        val currentDockItems = _state.value.dockItems.toMutableList()
+
+        // Remove item from wherever it was
+        currentGridItems.removeIf { it.id == item.id }
+        currentDockItems.removeIf { it.id == item.id }
+
+        val isTargetingDock = newPosition.row == -2
+
+        val targetList = if (isTargetingDock) currentDockItems else currentGridItems
+        val targetItem = targetList.find { it.position == newPosition }
 
         if (targetItem != null && targetItem.id != item.id) {
-            currentItems.removeIf { it.id == item.id }
-            currentItems.removeIf { it.id == targetItem.id }
+            targetList.removeIf { it.id == targetItem.id }
 
             if (targetItem is LauncherItem.FolderItem && item is LauncherItem.AppItem) {
                 val newFolder = targetItem.copy(apps = targetItem.apps + item)
-                currentItems.add(newFolder)
+                targetList.add(newFolder)
             } else if (targetItem is LauncherItem.AppItem && item is LauncherItem.AppItem) {
                 val newFolder = LauncherItem.FolderItem(
                     id = UUID.randomUUID().toString(),
@@ -135,36 +185,44 @@ class HomeScreenViewModel @Inject constructor(
                     apps = listOf(targetItem, item),
                     position = newPosition
                 )
-                currentItems.add(newFolder)
+                targetList.add(newFolder)
             } else {
-                currentItems.add(item)
-                currentItems.add(targetItem)
+                // Invalid merge
+                targetList.add(item)
+                targetList.add(targetItem)
             }
         } else {
-            currentItems.removeIf { it.id == item.id }
-            val updatedItem = when (item) {
-                is LauncherItem.AppItem -> item.copy(position = newPosition)
-                is LauncherItem.FolderItem -> item.copy(position = newPosition)
+            // Check dock bounds
+            if (isTargetingDock && currentDockItems.size >= 5 && targetItem == null) {
+                // Dock full, bounce back to grid
+                currentGridItems.add(item)
+            } else {
+                val updatedItem = when (item) {
+                    is LauncherItem.AppItem -> item.copy(position = newPosition)
+                    is LauncherItem.FolderItem -> item.copy(position = newPosition)
+                }
+                targetList.add(updatedItem)
             }
-            currentItems.add(updatedItem)
         }
 
-        saveAndEmitState(currentItems)
+        saveAndEmitState(currentGridItems, currentDockItems)
     }
 
-    private fun saveAndEmitState(items: List<LauncherItem>) {
-        val maxPage = items.maxOfOrNull { it.position.page } ?: 0
-        val pagesMap = items.groupBy { it.position.page }
+    private fun saveAndEmitState(gridItems: List<LauncherItem>, dockItems: List<LauncherItem>) {
+        val maxPage = gridItems.maxOfOrNull { it.position.page } ?: 0
+        val pagesMap = gridItems.groupBy { it.position.page }
 
         _state.update {
             it.copy(
                 pages = pagesMap,
-                totalPages = maxPage + 1
+                totalPages = maxPage + 1,
+                dockItems = dockItems
             )
         }
 
         viewModelScope.launch {
-            homePreferences.saveGridState(items)
+            homePreferences.saveGridState(gridItems)
+            homePreferences.saveDockState(dockItems)
         }
     }
 

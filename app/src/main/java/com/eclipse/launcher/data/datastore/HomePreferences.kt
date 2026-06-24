@@ -22,6 +22,7 @@ class HomePreferences @Inject constructor(@ApplicationContext private val contex
 
     companion object {
         val GRID_STATE_KEY = stringPreferencesKey("grid_state")
+        val DOCK_STATE_KEY = stringPreferencesKey("dock_state")
         val WALLPAPER_PATH_KEY = stringPreferencesKey("wallpaper_path")
     }
 
@@ -42,7 +43,29 @@ class HomePreferences @Inject constructor(@ApplicationContext private val contex
     }
 
     suspend fun saveGridState(items: List<LauncherItem>) {
-        val savedItems = items.map { item ->
+        val savedItems = serializeItems(items)
+        val json = gson.toJson(savedItems)
+        context.homeDataStore.edit { preferences ->
+            preferences[GRID_STATE_KEY] = json
+        }
+    }
+
+    fun getSavedDockState(): Flow<List<SavedItemPosition>> = context.homeDataStore.data.map { preferences ->
+        val json = preferences[DOCK_STATE_KEY] ?: "[]"
+        val type = object : TypeToken<List<SavedItemPosition>>() {}.type
+        gson.fromJson(json, type) ?: emptyList()
+    }
+
+    suspend fun saveDockState(items: List<LauncherItem>) {
+        val savedItems = serializeItems(items)
+        val json = gson.toJson(savedItems)
+        context.homeDataStore.edit { preferences ->
+            preferences[DOCK_STATE_KEY] = json
+        }
+    }
+
+    private fun serializeItems(items: List<LauncherItem>): List<SavedItemPosition> {
+        return items.map { item ->
             when (item) {
                 is LauncherItem.AppItem -> {
                     SavedItemPosition(
@@ -64,10 +87,6 @@ class HomePreferences @Inject constructor(@ApplicationContext private val contex
                     )
                 }
             }
-        }
-        val json = gson.toJson(savedItems)
-        context.homeDataStore.edit { preferences ->
-            preferences[GRID_STATE_KEY] = json
         }
     }
 

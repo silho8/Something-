@@ -7,5 +7,6 @@ data class HomeScreenState(
     // A map where the key is the Page index, and the value is a list of items on that page.
     val pages: Map<Int, List<LauncherItem>> = emptyMap(),
     val totalPages: Int = 1,
+    val dockItems: List<LauncherItem> = emptyList(),
     val wallpaperPath: String? = null
 )

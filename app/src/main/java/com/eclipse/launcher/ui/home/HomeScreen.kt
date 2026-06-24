@@ -8,7 +8,11 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.BottomSheetScaffold
@@ -32,6 +36,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.eclipse.launcher.presentation.viewmodel.HomeScreenViewModel
 import com.eclipse.launcher.ui.drawer.AppDrawer
+import com.eclipse.launcher.ui.home.components.FloatingDock
 import com.eclipse.launcher.ui.home.components.GridEngine
 import kotlinx.coroutines.launch
 import java.io.File
@@ -68,7 +73,7 @@ fun HomeScreen(
         sheetContainerColor = Color.Transparent,
         sheetDragHandle = null,
         containerColor = MaterialTheme.colorScheme.background
-    ) { paddingValues ->
+    ) { _ ->
         DragDropProvider {
             Box(
                 modifier = Modifier
@@ -85,8 +90,7 @@ fun HomeScreen(
                     )
                 }
 
-                HorizontalPager(
-                    state = pagerState,
+                Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .pointerInput(Unit) {
@@ -98,7 +102,7 @@ fun HomeScreen(
                         }
                         .draggable(
                             orientation = Orientation.Vertical,
-                            state = rememberDraggableState { delta -> },
+                            state = rememberDraggableState { _ -> },
                             onDragStopped = { velocity ->
                                 if (velocity < -500f) {
                                     scope.launch { bottomSheetState.expand() }
@@ -107,20 +111,37 @@ fun HomeScreen(
                                 }
                             }
                         )
-                ) { page ->
-                    val itemsOnPage = state.pages[page] ?: emptyList()
+                ) {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.weight(1f)
+                    ) { page ->
+                        val itemsOnPage = state.pages[page] ?: emptyList()
 
-                    GridEngine(
-                        page = page,
-                        items = itemsOnPage,
-                        columns = 5,
-                        rows = 6,
+                        GridEngine(
+                            page = page,
+                            items = itemsOnPage,
+                            columns = 5,
+                            rows = 6,
+                            onItemDropped = { item, position ->
+                                viewModel.onItemMoved(item, position)
+                            },
+                            onAppClick = { packageName ->
+                                viewModel.launchApp(packageName)
+                            }
+                        )
+                    }
+
+                    // Floating Dock overlay at the bottom
+                    FloatingDock(
+                        items = state.dockItems,
                         onItemDropped = { item, position ->
                             viewModel.onItemMoved(item, position)
                         },
                         onAppClick = { packageName ->
                             viewModel.launchApp(packageName)
-                        }
+                        },
+                        modifier = Modifier.padding(bottom = 16.dp)
                     )
                 }
             }
