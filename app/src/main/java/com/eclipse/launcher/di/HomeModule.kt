@@ -2,8 +2,10 @@ package com.eclipse.launcher.di
 
 import android.content.Context
 import com.eclipse.launcher.data.datastore.HomePreferences
+import com.eclipse.launcher.data.repository.DynamicThemeRepositoryImpl
 import com.eclipse.launcher.data.repository.InstalledAppsManagerImpl
 import com.eclipse.launcher.data.repository.WallpaperRepositoryImpl
+import com.eclipse.launcher.domain.repository.DynamicThemeRepository
 import com.eclipse.launcher.domain.repository.InstalledAppsManager
 import com.eclipse.launcher.domain.repository.WallpaperRepository
 import dagger.Module
@@ -39,5 +41,14 @@ object HomeModule {
         @ApplicationContext context: Context
     ): WallpaperRepository {
         return WallpaperRepositoryImpl(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDynamicThemeRepository(
+        @ApplicationContext context: Context,
+        homePreferences: HomePreferences
+    ): DynamicThemeRepository {
+        return DynamicThemeRepositoryImpl(context, homePreferences)
     }
 }

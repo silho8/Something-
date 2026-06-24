@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
@@ -40,7 +41,7 @@ fun AppDrawer(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.95f))
+            .background(MaterialTheme.colorScheme.background.copy(alpha = 0.95f))
     ) {
         OutlinedTextField(
             value = searchQuery,
@@ -48,15 +49,15 @@ fun AppDrawer(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            placeholder = { Text("Search apps", color = Color.Gray) },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = Color.Gray) },
+            placeholder = { Text("Search apps", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                focusedBorderColor = Color.White,
-                unfocusedBorderColor = Color.DarkGray
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
             ),
             shape = RoundedCornerShape(24.dp)
         )

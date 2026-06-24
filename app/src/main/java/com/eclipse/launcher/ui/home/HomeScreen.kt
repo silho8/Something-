@@ -14,6 +14,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberStandardBottomSheetState
@@ -44,8 +45,8 @@ fun HomeScreen(
     val state by viewModel.state.collectAsState()
 
     if (state.isLoading) {
-        Box(modifier = Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(color = Color.White)
+        Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.onSurface)
         }
         return
     }
@@ -66,13 +67,13 @@ fun HomeScreen(
         sheetPeekHeight = 0.dp,
         sheetContainerColor = Color.Transparent,
         sheetDragHandle = null,
-        containerColor = Color.Black
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         DragDropProvider {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black)
+                    .background(MaterialTheme.colorScheme.background)
             ) {
                 // Render Wallpaper Background
                 if (state.wallpaperPath != null) {

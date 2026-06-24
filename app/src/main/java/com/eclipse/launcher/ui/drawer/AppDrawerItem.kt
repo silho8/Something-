@@ -44,7 +44,7 @@ fun AppDrawerItem(
         } ?: Box(
             modifier = Modifier
                 .size(48.dp)
-                .background(Color.Gray, CircleShape)
+                .background(MaterialTheme.colorScheme.surface, CircleShape)
         )
 
         Spacer(modifier = Modifier.width(16.dp))
@@ -52,7 +52,7 @@ fun AppDrawerItem(
         Text(
             text = item.label,
             style = MaterialTheme.typography.bodyLarge,
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
         )

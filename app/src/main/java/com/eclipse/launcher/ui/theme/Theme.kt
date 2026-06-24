@@ -10,44 +10,43 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.eclipse.launcher.domain.model.DynamicThemeColors
 import com.eclipse.launcher.domain.TypographyStyle
-
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-)
 
 @Composable
 fun EclipseLauncherTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false, // Disable default dynamic color to use our custom extracted ones
     typographyStyle: TypographyStyle = TypographyStyle.NDOT_WIDGETS_ONLY,
+    dynamicThemeColors: DynamicThemeColors? = null,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    // Determine the base colors from extracted palette if available, falling back to defaults.
+    val extractedPrimary = dynamicThemeColors?.dominantColor?.let { Color(it) } ?: Purple40
+    val extractedSecondary = dynamicThemeColors?.secondaryColor?.let { Color(it) } ?: PurpleGrey40
+    val extractedTertiary = dynamicThemeColors?.accentColor?.let { Color(it) } ?: Pink40
+    val extractedBackground = dynamicThemeColors?.backgroundColor?.let { Color(it) } ?: Color.Black
+    val extractedSurface = dynamicThemeColors?.widgetColor?.let { Color(it) } ?: Color.DarkGray
+
+    val colorScheme = darkColorScheme(
+        primary = extractedPrimary,
+        secondary = extractedSecondary,
+        tertiary = extractedTertiary,
+        background = extractedBackground,
+        surface = extractedSurface,
+        onSurface = dynamicThemeColors?.iconTintColor?.let { Color(it) } ?: Color.White
+    )
+
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
+            window.statusBarColor = Color.Transparent.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }
     }

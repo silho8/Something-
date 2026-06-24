@@ -81,7 +81,7 @@ fun LauncherItemView(
                 } ?: Box(
                     modifier = Modifier
                         .size(56.dp)
-                        .background(Color.Gray, CircleShape)
+                        .background(MaterialTheme.colorScheme.surface, CircleShape)
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -89,7 +89,7 @@ fun LauncherItemView(
                 Text(
                     text = item.label,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(horizontal = 4.dp)
@@ -100,12 +100,12 @@ fun LauncherItemView(
                     modifier = Modifier
                         .size(56.dp)
                         .clip(CircleShape)
-                        .background(Color.DarkGray.copy(alpha = 0.8f)),
+                        .background(MaterialTheme.colorScheme.surface),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "${item.apps.size}",
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
@@ -114,7 +114,7 @@ fun LauncherItemView(
                 Text(
                     text = item.name,
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
