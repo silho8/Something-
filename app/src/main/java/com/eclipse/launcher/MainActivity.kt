@@ -26,8 +26,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             val dynamicThemeViewModel: DynamicThemeViewModel = hiltViewModel()
             val themeColors by dynamicThemeViewModel.themeColors.collectAsState()
+            val iconStyle by dynamicThemeViewModel.iconStyle.collectAsState()
 
-            EclipseLauncherTheme(dynamicThemeColors = themeColors) {
+            EclipseLauncherTheme(
+                dynamicThemeColors = themeColors,
+                iconStyle = iconStyle
+            ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

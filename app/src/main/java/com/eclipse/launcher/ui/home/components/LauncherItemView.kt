@@ -1,7 +1,6 @@
 package com.eclipse.launcher.ui.home.components
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
@@ -21,15 +20,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.drawable.toBitmap
 import com.eclipse.launcher.domain.model.LauncherItem
 import com.eclipse.launcher.ui.home.LocalDragDropState
 import com.eclipse.launcher.ui.theme.GlassContainer
+import com.eclipse.launcher.ui.theme.StyledIcon
 
 @Composable
 fun LauncherItemView(
@@ -73,16 +70,10 @@ fun LauncherItemView(
 
         when (item) {
             is LauncherItem.AppItem -> {
-                item.icon?.let { drawable ->
-                    Image(
-                        bitmap = drawable.toBitmap().asImageBitmap(),
-                        contentDescription = item.label,
-                        modifier = Modifier.size(56.dp)
-                    )
-                } ?: Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .background(MaterialTheme.colorScheme.surface, CircleShape)
+                StyledIcon(
+                    drawable = item.icon,
+                    contentDescription = item.label,
+                    modifier = Modifier.size(56.dp)
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))

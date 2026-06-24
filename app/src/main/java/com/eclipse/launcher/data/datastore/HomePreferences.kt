@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.eclipse.launcher.domain.model.GridPosition
+import com.eclipse.launcher.domain.model.IconStyle
 import com.eclipse.launcher.domain.model.LauncherItem
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -24,6 +25,7 @@ class HomePreferences @Inject constructor(@ApplicationContext private val contex
         val GRID_STATE_KEY = stringPreferencesKey("grid_state")
         val DOCK_STATE_KEY = stringPreferencesKey("dock_state")
         val WALLPAPER_PATH_KEY = stringPreferencesKey("wallpaper_path")
+        val ICON_STYLE_KEY = stringPreferencesKey("icon_style")
     }
 
     data class SavedItemPosition(
@@ -97,6 +99,21 @@ class HomePreferences @Inject constructor(@ApplicationContext private val contex
     suspend fun saveWallpaperPath(path: String) {
         context.homeDataStore.edit { preferences ->
             preferences[WALLPAPER_PATH_KEY] = path
+        }
+    }
+
+    fun getIconStyle(): Flow<IconStyle> = context.homeDataStore.data.map { preferences ->
+        val styleString = preferences[ICON_STYLE_KEY] ?: IconStyle.GLASS.name
+        try {
+            IconStyle.valueOf(styleString)
+        } catch (e: IllegalArgumentException) {
+            IconStyle.GLASS
+        }
+    }
+
+    suspend fun saveIconStyle(style: IconStyle) {
+        context.homeDataStore.edit { preferences ->
+            preferences[ICON_STYLE_KEY] = style.name
         }
     }
 }

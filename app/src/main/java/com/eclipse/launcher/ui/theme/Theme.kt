@@ -18,15 +18,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import com.eclipse.launcher.domain.model.DynamicThemeColors
+import com.eclipse.launcher.domain.model.IconStyle
 import com.eclipse.launcher.domain.TypographyStyle
 
 val LocalDynamicThemeColors = compositionLocalOf { DynamicThemeColors() }
+val LocalIconStyle = compositionLocalOf { IconStyle.GLASS }
 
 @Composable
 fun EclipseLauncherTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     typographyStyle: TypographyStyle = TypographyStyle.NDOT_WIDGETS_ONLY,
     dynamicThemeColors: DynamicThemeColors? = null,
+    iconStyle: IconStyle = IconStyle.GLASS,
     content: @Composable () -> Unit
 ) {
     val extractedPrimary = dynamicThemeColors?.dominantColor?.let { Color(it) } ?: Purple40
@@ -56,7 +59,8 @@ fun EclipseLauncherTheme(
     val dynamicTypography = getTypography(typographyStyle)
 
     CompositionLocalProvider(
-        LocalDynamicThemeColors provides (dynamicThemeColors ?: DynamicThemeColors())
+        LocalDynamicThemeColors provides (dynamicThemeColors ?: DynamicThemeColors()),
+        LocalIconStyle provides iconStyle
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
