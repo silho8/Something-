@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
+import com.eclipse.launcher.domain.TypographyStyle
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -31,6 +32,7 @@ private val LightColorScheme = lightColorScheme(
 fun EclipseLauncherTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
+    typographyStyle: TypographyStyle = TypographyStyle.NDOT_WIDGETS_ONLY,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
@@ -50,9 +52,11 @@ fun EclipseLauncherTheme(
         }
     }
 
+    val dynamicTypography = getTypography(typographyStyle)
+
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = dynamicTypography,
         content = content
     )
 }
