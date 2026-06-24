@@ -27,6 +27,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberAsyncImagePainter
+import com.canhub.cropper.CropImageContract
+import com.canhub.cropper.CropImageContractOptions
+import com.canhub.cropper.CropImageOptions
 import com.eclipse.launcher.presentation.viewmodel.WallpaperViewModel
 
 @Composable
@@ -36,10 +39,23 @@ fun WallpaperScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    val launcher = rememberLauncherForActivityResult(
+    val cropLauncher = rememberLauncherForActivityResult(CropImageContract()) { result ->
+        if (result.isSuccessful) {
+            viewModel.onImageCropped(result.uriContent)
+        } else {
+            // Handled as cancel/failure, fallback to uncropped
+            viewModel.onImageCropped(state.selectedUri)
+        }
+    }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        viewModel.onImageSelected(uri)
+        if (uri != null) {
+            viewModel.onImageSelected(uri)
+            val cropOptions = CropImageContractOptions(uri, CropImageOptions())
+            cropLauncher.launch(cropOptions)
+        }
     }
 
     LaunchedEffect(state.saveSuccess) {
@@ -53,13 +69,14 @@ fun WallpaperScreen(
             .fillMaxSize()
             .background(Color.Black)
     ) {
-        if (state.selectedUri != null) {
+        if (state.croppedUri != null || state.selectedUri != null) {
+            val previewUri = state.croppedUri ?: state.selectedUri
             // Preview selected image (using Coil)
             Image(
-                painter = rememberAsyncImagePainter(state.selectedUri),
+                painter = rememberAsyncImagePainter(previewUri),
                 contentDescription = "Wallpaper Preview",
                 modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop // Automatic center-crop behavior
+                contentScale = ContentScale.Crop
             )
 
             // Overlay controls
@@ -80,7 +97,7 @@ fun WallpaperScreen(
                     }
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(
-                        onClick = { launcher.launch("image/*") },
+                        onClick = { galleryLauncher.launch("image/*") },
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Text("Pick Another Image")
@@ -95,7 +112,7 @@ fun WallpaperScreen(
             ) {
                 Text("No wallpaper selected", color = Color.White, style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(16.dp))
-                Button(onClick = { launcher.launch("image/*") }) {
+                Button(onClick = { galleryLauncher.launch("image/*") }) {
                     Text("Pick from Gallery")
                 }
             }

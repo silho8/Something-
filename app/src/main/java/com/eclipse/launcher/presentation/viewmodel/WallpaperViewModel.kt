@@ -15,6 +15,7 @@ import javax.inject.Inject
 
 data class WallpaperState(
     val selectedUri: Uri? = null,
+    val croppedUri: Uri? = null,
     val isSaving: Boolean = false,
     val saveSuccess: Boolean = false
 )
@@ -32,8 +33,12 @@ class WallpaperViewModel @Inject constructor(
         _state.update { it.copy(selectedUri = uri, saveSuccess = false) }
     }
 
+    fun onImageCropped(uri: Uri?) {
+        _state.update { it.copy(croppedUri = uri, saveSuccess = false) }
+    }
+
     fun saveWallpaper() {
-        val uri = _state.value.selectedUri ?: return
+        val uri = _state.value.croppedUri ?: _state.value.selectedUri ?: return
 
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true) }

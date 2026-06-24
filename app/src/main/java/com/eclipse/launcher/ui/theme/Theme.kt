@@ -21,12 +21,10 @@ import com.eclipse.launcher.domain.TypographyStyle
 @Composable
 fun EclipseLauncherTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false, // Disable default dynamic color to use our custom extracted ones
     typographyStyle: TypographyStyle = TypographyStyle.NDOT_WIDGETS_ONLY,
     dynamicThemeColors: DynamicThemeColors? = null,
     content: @Composable () -> Unit
 ) {
-    // Determine the base colors from extracted palette if available, falling back to defaults.
     val extractedPrimary = dynamicThemeColors?.dominantColor?.let { Color(it) } ?: Purple40
     val extractedSecondary = dynamicThemeColors?.secondaryColor?.let { Color(it) } ?: PurpleGrey40
     val extractedTertiary = dynamicThemeColors?.accentColor?.let { Color(it) } ?: Pink40

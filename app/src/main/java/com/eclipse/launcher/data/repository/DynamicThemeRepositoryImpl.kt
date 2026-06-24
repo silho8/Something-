@@ -45,9 +45,9 @@ class DynamicThemeRepositoryImpl @Inject constructor(
 
         val palette = Palette.from(bitmap).generate()
 
-        val dominantColor = palette.getDominantColor(Color.BLACK).toLong()
-        val secondaryColor = palette.getMutedColor(dominantColor.toInt()).toLong()
-        val accentColor = palette.getVibrantColor(dominantColor.toInt()).toLong()
+        val dominantColor = palette.getDominantColor(Color.BLACK)
+        val secondaryColor = palette.getMutedColor(dominantColor)
+        val accentColor = palette.getVibrantColor(dominantColor)
 
         // Calculate derivatives
         val backgroundColor = adjustAlpha(dominantColor, 0.9f) // Slight transparency for the wallpaper
@@ -55,11 +55,11 @@ class DynamicThemeRepositoryImpl @Inject constructor(
         val dockColor = adjustAlpha(dominantColor, 0.7f) // Slightly darker than background
 
         // Ensure contrast for icons
-        val isDarkBackground = ColorUtils.calculateLuminance(dominantColor.toInt()) < 0.5
+        val isDarkBackground = ColorUtils.calculateLuminance(dominantColor) < 0.5
         val iconTintColor = if (isDarkBackground) {
-            Color.WHITE.toLong()
+            Color.WHITE
         } else {
-            Color.BLACK.toLong()
+            Color.BLACK
         }
 
         DynamicThemeColors(
@@ -73,11 +73,11 @@ class DynamicThemeRepositoryImpl @Inject constructor(
         )
     }
 
-    private fun adjustAlpha(color: Long, factor: Float): Long {
-        val alpha = Math.round(Color.alpha(color.toInt()) * factor)
-        val r = Color.red(color.toInt())
-        val g = Color.green(color.toInt())
-        val b = Color.blue(color.toInt())
-        return Color.argb(alpha, r, g, b).toLong()
+    private fun adjustAlpha(color: Int, factor: Float): Int {
+        val alpha = Math.round(Color.alpha(color) * factor)
+        val r = Color.red(color)
+        val g = Color.green(color)
+        val b = Color.blue(color)
+        return Color.argb(alpha, r, g, b)
     }
 }

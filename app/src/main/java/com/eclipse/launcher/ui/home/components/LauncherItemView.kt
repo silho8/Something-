@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import com.eclipse.launcher.domain.model.LauncherItem
 import com.eclipse.launcher.ui.home.LocalDragDropState
+import com.eclipse.launcher.ui.theme.GlassContainer
 
 @Composable
 fun LauncherItemView(
@@ -96,17 +97,19 @@ fun LauncherItemView(
                 )
             }
             is LauncherItem.FolderItem -> {
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.surface),
-                    contentAlignment = Alignment.Center
+                GlassContainer(
+                    modifier = Modifier.size(56.dp),
+                    shape = CircleShape,
+                    backgroundColor = MaterialTheme.colorScheme.surface,
+                    transparency = 0.5f,
+                    blurIntensity = 25.dp
                 ) {
-                    Text(
-                        text = "${item.apps.size}",
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = "${item.apps.size}",
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(4.dp))
