@@ -22,4 +22,11 @@ sealed class LauncherItem {
         val apps: List<AppItem>,
         override val position: GridPosition
     ) : LauncherItem()
+
+    data class WidgetItem(
+        override val id: String, // Unique UUID for the instance
+        val widgetType: WidgetType,
+        val size: WidgetSize,
+        override val position: GridPosition
+    ) : LauncherItem()
 }

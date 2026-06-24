@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import com.eclipse.launcher.domain.model.GridPosition
 import com.eclipse.launcher.domain.model.LauncherItem
+import com.eclipse.launcher.domain.model.WidgetSize
+import com.eclipse.launcher.domain.registry.WidgetRegistry
 import com.eclipse.launcher.ui.home.LocalDragDropState
 import kotlin.math.roundToInt
 
@@ -25,8 +27,10 @@ fun GridEngine(
     items: List<LauncherItem>,
     columns: Int = 5,
     rows: Int = 6,
+    widgetRegistry: WidgetRegistry,
     onItemDropped: (item: LauncherItem, position: GridPosition) -> Unit,
     onAppClick: (String) -> Unit,
+    onWidgetResize: (LauncherItem.WidgetItem, deltaXCols: Int, deltaYRows: Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val dragDropState = LocalDragDropState.current
@@ -48,33 +52,51 @@ fun GridEngine(
                 val xOffset = item.position.column * cellWidth
                 val yOffset = item.position.row * cellHeight
 
+                val itemSize = if (item is LauncherItem.WidgetItem) item.size else WidgetSize(1, 1)
+
                 Box(
                     modifier = Modifier
                         .offset { IntOffset(xOffset, yOffset) }
                         .size(
-                            width = with(androidx.compose.ui.platform.LocalDensity.current) { cellWidth.toDp() },
-                            height = with(androidx.compose.ui.platform.LocalDensity.current) { cellHeight.toDp() }
+                            width = with(androidx.compose.ui.platform.LocalDensity.current) { (cellWidth * itemSize.spanColumns).toDp() },
+                            height = with(androidx.compose.ui.platform.LocalDensity.current) { (cellHeight * itemSize.spanRows).toDp() }
                         )
                 ) {
-                    LauncherItemView(item = item, isDragging = false, onAppClick = onAppClick)
+                    LauncherItemView(
+                        item = item,
+                        widgetRegistry = widgetRegistry,
+                        isDragging = false,
+                        onAppClick = onAppClick,
+                        onWidgetResize = { widget, deltaX, deltaY ->
+                            // Convert pixel deltas to column/row deltas
+                            val dxCols = (deltaX / cellWidth).roundToInt()
+                            val dyRows = (deltaY / cellHeight).roundToInt()
+                            if (dxCols != 0 || dyRows != 0) {
+                                onWidgetResize(widget, dxCols, dyRows)
+                            }
+                        }
+                    )
                 }
             }
 
             // Draw dragged item overlay
             dragDropState.draggedItem?.let { dragged ->
-                if (dragged.position.page == page) {
+                if (dragged.position.page == page || dragDropState.dropPosition?.page == page) {
                     val originalX = dragged.position.column * cellWidth
                     val originalY = dragged.position.row * cellHeight
 
                     val currentX = (originalX + dragDropState.dragPosition.x).roundToInt()
                     val currentY = (originalY + dragDropState.dragPosition.y).roundToInt()
 
+                    val draggedSize = if (dragged is LauncherItem.WidgetItem) dragged.size else WidgetSize(1, 1)
+
                     if (dragDropState.isDropped) {
                         LaunchedEffect(dragDropState.isDropped) {
                             val dropCol = (currentX + cellWidth / 2) / cellWidth
                             val dropRow = (currentY + cellHeight / 2) / cellHeight
 
-                            if (dropCol in 0 until columns && dropRow in 0 until rows) {
+                            if (dropCol >= 0 && dropCol + draggedSize.spanColumns <= columns &&
+                                dropRow >= 0 && dropRow + draggedSize.spanRows <= rows) {
                                 onItemDropped(dragged, GridPosition(page, dropRow, dropCol))
                             } else {
                                 onItemDropped(dragged, dragged.position)
@@ -86,11 +108,17 @@ fun GridEngine(
                             modifier = Modifier
                                 .offset { IntOffset(currentX, currentY) }
                                 .size(
-                                    width = with(androidx.compose.ui.platform.LocalDensity.current) { cellWidth.toDp() },
-                                    height = with(androidx.compose.ui.platform.LocalDensity.current) { cellHeight.toDp() }
+                                    width = with(androidx.compose.ui.platform.LocalDensity.current) { (cellWidth * draggedSize.spanColumns).toDp() },
+                                    height = with(androidx.compose.ui.platform.LocalDensity.current) { (cellHeight * draggedSize.spanRows).toDp() }
                                 )
                         ) {
-                            LauncherItemView(item = dragged, isDragging = true, onAppClick = onAppClick)
+                            LauncherItemView(
+                                item = dragged,
+                                widgetRegistry = widgetRegistry,
+                                isDragging = true,
+                                onAppClick = onAppClick,
+                                onWidgetResize = {_,_,_->} // Disable resize while dragging
+                            )
                         }
                     }
                 }

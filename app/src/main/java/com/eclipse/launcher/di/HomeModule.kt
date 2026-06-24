@@ -2,9 +2,11 @@ package com.eclipse.launcher.di
 
 import android.content.Context
 import com.eclipse.launcher.data.datastore.HomePreferences
+import com.eclipse.launcher.data.registry.WidgetRegistryImpl
 import com.eclipse.launcher.data.repository.DynamicThemeRepositoryImpl
 import com.eclipse.launcher.data.repository.InstalledAppsManagerImpl
 import com.eclipse.launcher.data.repository.WallpaperRepositoryImpl
+import com.eclipse.launcher.domain.registry.WidgetRegistry
 import com.eclipse.launcher.domain.repository.DynamicThemeRepository
 import com.eclipse.launcher.domain.repository.InstalledAppsManager
 import com.eclipse.launcher.domain.repository.WallpaperRepository
@@ -50,5 +52,11 @@ object HomeModule {
         homePreferences: HomePreferences
     ): DynamicThemeRepository {
         return DynamicThemeRepositoryImpl(context, homePreferences)
+    }
+
+    @Provides
+    @Singleton
+    fun provideWidgetRegistry(): WidgetRegistry {
+        return WidgetRegistryImpl()
     }
 }

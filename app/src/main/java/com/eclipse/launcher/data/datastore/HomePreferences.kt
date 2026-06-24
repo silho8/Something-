@@ -9,6 +9,8 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.eclipse.launcher.domain.model.GridPosition
 import com.eclipse.launcher.domain.model.IconStyle
 import com.eclipse.launcher.domain.model.LauncherItem
+import com.eclipse.launcher.domain.model.WidgetSize
+import com.eclipse.launcher.domain.model.WidgetType
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -35,7 +37,12 @@ class HomePreferences @Inject constructor(@ApplicationContext private val contex
         val column: Int,
         val isFolder: Boolean = false,
         val folderName: String? = null,
-        val folderContents: List<String>? = null
+        val folderContents: List<String>? = null,
+        // Widget Specifics
+        val isWidget: Boolean = false,
+        val widgetType: String? = null,
+        val spanCols: Int? = null,
+        val spanRows: Int? = null
     )
 
     fun getSavedGridState(): Flow<List<SavedItemPosition>> = context.homeDataStore.data.map { preferences ->
@@ -86,6 +93,18 @@ class HomePreferences @Inject constructor(@ApplicationContext private val contex
                         isFolder = true,
                         folderName = item.name,
                         folderContents = item.apps.map { it.id }
+                    )
+                }
+                is LauncherItem.WidgetItem -> {
+                    SavedItemPosition(
+                        id = item.id,
+                        page = item.position.page,
+                        row = item.position.row,
+                        column = item.position.column,
+                        isWidget = true,
+                        widgetType = item.widgetType.name,
+                        spanCols = item.size.spanColumns,
+                        spanRows = item.size.spanRows
                     )
                 }
             }
