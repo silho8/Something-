@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.eclipse.launcher.ui.home.HomeScreen
 import com.eclipse.launcher.ui.theme.EclipseLauncherTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -26,7 +27,7 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     NavHost(navController = navController, startDestination = "home") {
                         composable("home") {
-                            // Empty for now as per requirements
+                            HomeScreen()
                         }
                     }
                 }
