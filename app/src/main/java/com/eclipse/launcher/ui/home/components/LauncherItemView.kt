@@ -1,6 +1,5 @@
 package com.eclipse.launcher.ui.home.components
 
-import android.content.Intent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -25,7 +24,6 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
@@ -35,9 +33,9 @@ import com.eclipse.launcher.ui.home.LocalDragDropState
 @Composable
 fun LauncherItemView(
     item: LauncherItem,
-    isDragging: Boolean = false
+    isDragging: Boolean = false,
+    onAppClick: (String) -> Unit = {}
 ) {
-    val context = LocalContext.current
     val dragDropState = LocalDragDropState.current
 
     val scale by animateFloatAsState(if (isDragging) 1.2f else 1.0f)
@@ -66,11 +64,7 @@ fun LauncherItemView(
             }
             .clickable {
                 if (item is LauncherItem.AppItem) {
-                    val intent = context.packageManager.getLaunchIntentForPackage(item.packageName)
-                    intent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    if (intent != null) {
-                        context.startActivity(intent)
-                    }
+                    onAppClick(item.packageName)
                 }
             }
     ) {

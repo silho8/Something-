@@ -3,9 +3,10 @@ package com.eclipse.launcher.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.eclipse.launcher.data.datastore.HomePreferences
+import com.eclipse.launcher.domain.model.AppSortType
 import com.eclipse.launcher.domain.model.GridPosition
 import com.eclipse.launcher.domain.model.LauncherItem
-import com.eclipse.launcher.domain.repository.AppRepository
+import com.eclipse.launcher.domain.repository.InstalledAppsManager
 import com.eclipse.launcher.ui.home.HomeScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +20,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeScreenViewModel @Inject constructor(
-    private val appRepository: AppRepository,
+    private val installedAppsManager: InstalledAppsManager,
     private val homePreferences: HomePreferences
 ) : ViewModel() {
 
@@ -36,7 +37,8 @@ class HomeScreenViewModel @Inject constructor(
 
     private fun loadHomeData() {
         viewModelScope.launch {
-            val installedApps = appRepository.getInstalledApps()
+            // Using alphabetical sorting by default
+            val installedApps = installedAppsManager.getInstalledApps(AppSortType.ALPHABETICAL_ASC)
             val savedState = homePreferences.getSavedGridState().first()
 
             val finalItems = mutableListOf<LauncherItem>()
@@ -116,20 +118,16 @@ class HomeScreenViewModel @Inject constructor(
     fun onItemMoved(item: LauncherItem, newPosition: GridPosition) {
         val currentItems = _state.value.pages.values.flatten().toMutableList()
 
-        // Find if there's an item at the target position
         val targetItem = currentItems.find { it.position == newPosition }
 
         if (targetItem != null && targetItem.id != item.id) {
-            // Dropped onto another item: create folder or add to folder
             currentItems.removeIf { it.id == item.id }
             currentItems.removeIf { it.id == targetItem.id }
 
             if (targetItem is LauncherItem.FolderItem && item is LauncherItem.AppItem) {
-                // Add to existing folder
                 val newFolder = targetItem.copy(apps = targetItem.apps + item)
                 currentItems.add(newFolder)
             } else if (targetItem is LauncherItem.AppItem && item is LauncherItem.AppItem) {
-                // Create new folder
                 val newFolder = LauncherItem.FolderItem(
                     id = UUID.randomUUID().toString(),
                     name = "Folder",
@@ -138,12 +136,10 @@ class HomeScreenViewModel @Inject constructor(
                 )
                 currentItems.add(newFolder)
             } else {
-                // Invalid combination (e.g., folder into folder). Reject drop by restoring both.
                 currentItems.add(item)
                 currentItems.add(targetItem)
             }
         } else {
-            // Normal move or target is self
             currentItems.removeIf { it.id == item.id }
             val updatedItem = when (item) {
                 is LauncherItem.AppItem -> item.copy(position = newPosition)
@@ -169,5 +165,9 @@ class HomeScreenViewModel @Inject constructor(
         viewModelScope.launch {
             homePreferences.saveGridState(items)
         }
+    }
+
+    fun launchApp(packageName: String) {
+        installedAppsManager.launchApp(packageName)
     }
 }

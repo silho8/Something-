@@ -12,6 +12,7 @@ sealed class LauncherItem {
         val className: String,
         val label: String,
         val icon: Drawable? = null,
+        val installTime: Long = 0L,
         override val position: GridPosition
     ) : LauncherItem()
 

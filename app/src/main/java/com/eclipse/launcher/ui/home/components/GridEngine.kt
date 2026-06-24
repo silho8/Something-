@@ -26,6 +26,7 @@ fun GridEngine(
     columns: Int = 5,
     rows: Int = 6,
     onItemDropped: (item: LauncherItem, position: GridPosition) -> Unit,
+    onAppClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val dragDropState = LocalDragDropState.current
@@ -55,7 +56,7 @@ fun GridEngine(
                             height = with(androidx.compose.ui.platform.LocalDensity.current) { cellHeight.toDp() }
                         )
                 ) {
-                    LauncherItemView(item = item, isDragging = false)
+                    LauncherItemView(item = item, isDragging = false, onAppClick = onAppClick)
                 }
             }
 
@@ -89,7 +90,7 @@ fun GridEngine(
                                     height = with(androidx.compose.ui.platform.LocalDensity.current) { cellHeight.toDp() }
                                 )
                         ) {
-                            LauncherItemView(item = dragged, isDragging = true)
+                            LauncherItemView(item = dragged, isDragging = true, onAppClick = onAppClick)
                         }
                     }
                 }

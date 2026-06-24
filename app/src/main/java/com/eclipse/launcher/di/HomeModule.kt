@@ -2,8 +2,8 @@ package com.eclipse.launcher.di
 
 import android.content.Context
 import com.eclipse.launcher.data.datastore.HomePreferences
-import com.eclipse.launcher.data.repository.AppRepositoryImpl
-import com.eclipse.launcher.domain.repository.AppRepository
+import com.eclipse.launcher.data.repository.InstalledAppsManagerImpl
+import com.eclipse.launcher.domain.repository.InstalledAppsManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,10 +17,10 @@ object HomeModule {
 
     @Provides
     @Singleton
-    fun provideAppRepository(
+    fun provideInstalledAppsManager(
         @ApplicationContext context: Context
-    ): AppRepository {
-        return AppRepositoryImpl(context)
+    ): InstalledAppsManager {
+        return InstalledAppsManagerImpl(context)
     }
 
     @Provides

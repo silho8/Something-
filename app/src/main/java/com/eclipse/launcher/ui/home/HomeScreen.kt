@@ -52,6 +52,9 @@ fun HomeScreen(
                     rows = 6,
                     onItemDropped = { item, position ->
                         viewModel.onItemMoved(item, position)
+                    },
+                    onAppClick = { packageName ->
+                        viewModel.launchApp(packageName)
                     }
                 )
             }
