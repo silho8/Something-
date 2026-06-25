@@ -51,8 +51,14 @@ fun EclipseLauncherTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = Color.Transparent.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+            // Ensure navigation bar is entirely transparent for the launcher
+            window.navigationBarColor = Color.Transparent.toArgb()
+
+            // Set light/dark icons depending on the theme.
+            // Note: We intentionally avoid interacting with `statusBarColor` or hiding logic
+            // here, as that is explicitly driven by MainActivity to force immersive mode permanently.
+            val insetsController = WindowCompat.getInsetsController(window, view)
+            insetsController.isAppearanceLightNavigationBars = !darkTheme
         }
     }
 
