@@ -19,7 +19,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import com.eclipse.launcher.domain.model.DynamicThemeColors
 import com.eclipse.launcher.domain.model.IconStyle
-import com.eclipse.launcher.domain.TypographyStyle
+import com.eclipse.launcher.domain.model.TypographyStyle
 
 val LocalDynamicThemeColors = compositionLocalOf { DynamicThemeColors() }
 val LocalIconStyle = compositionLocalOf { IconStyle.GLASS }

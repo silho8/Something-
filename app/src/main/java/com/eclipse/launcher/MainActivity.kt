@@ -18,6 +18,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.eclipse.launcher.presentation.viewmodel.DynamicThemeViewModel
 import com.eclipse.launcher.ui.home.HomeScreen
+import com.eclipse.launcher.ui.search.SearchScreen
+import com.eclipse.launcher.ui.settings.SettingsScreen
 import com.eclipse.launcher.ui.theme.EclipseLauncherTheme
 import com.eclipse.launcher.ui.wallpaper.WallpaperScreen
 import dagger.hilt.android.AndroidEntryPoint
@@ -27,10 +29,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Enable edge-to-edge drawing
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        // Hide the status bar for immersive distraction-free mode
         val insetsController = WindowCompat.getInsetsController(window, window.decorView)
         insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
         insetsController.hide(WindowInsetsCompat.Type.statusBars())
@@ -39,10 +39,12 @@ class MainActivity : ComponentActivity() {
             val dynamicThemeViewModel: DynamicThemeViewModel = hiltViewModel()
             val themeColors by dynamicThemeViewModel.themeColors.collectAsState()
             val iconStyle by dynamicThemeViewModel.iconStyle.collectAsState()
+            val typographyStyle by dynamicThemeViewModel.typographyStyle.collectAsState()
 
             EclipseLauncherTheme(
                 dynamicThemeColors = themeColors,
-                iconStyle = iconStyle
+                iconStyle = iconStyle,
+                typographyStyle = typographyStyle
             ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -52,16 +54,30 @@ class MainActivity : ComponentActivity() {
                     NavHost(navController = navController, startDestination = "home") {
                         composable("home") {
                             HomeScreen(
-                                onNavigateToWallpaper = {
-                                    navController.navigate("wallpaper")
-                                }
+                                onNavigateToWallpaper = { navController.navigate("wallpaper") },
+                                onNavigateToSearch = { navController.navigate("search") },
+                                onNavigateToSettings = { navController.navigate("settings") }
                             )
                         }
                         composable("wallpaper") {
+                            val homeViewModel: com.eclipse.launcher.presentation.viewmodel.HomeScreenViewModel = hiltViewModel()
+                            val state by homeViewModel.state.collectAsState()
                             WallpaperScreen(
-                                onNavigateBack = {
-                                    navController.popBackStack()
-                                }
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable("search") {
+                            val homeViewModel: com.eclipse.launcher.presentation.viewmodel.HomeScreenViewModel = hiltViewModel()
+                            val state by homeViewModel.state.collectAsState()
+                            SearchScreen(
+                                wallpaperPath = state.wallpaperPath,
+                                onNavigateBack = { navController.popBackStack() }
+                            )
+                        }
+                        composable("settings") {
+                            SettingsScreen(
+                                onNavigateBack = { navController.popBackStack() },
+                                onNavigateToWallpaper = { navController.navigate("wallpaper") }
                             )
                         }
                     }

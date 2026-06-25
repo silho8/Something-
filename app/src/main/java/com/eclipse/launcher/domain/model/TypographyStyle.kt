@@ -1,7 +1,7 @@
-package com.eclipse.launcher.domain
+package com.eclipse.launcher.domain.model
 
 enum class TypographyStyle {
     NDOT_EVERYWHERE,
     NDOT_WIDGETS_ONLY,
-    SYSTEM_FONT_ONLY
+    SYSTEM_FONT
 }

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,14 +45,17 @@ fun GridEngine(
             }
     ) {
         if (gridSize.width > 0 && gridSize.height > 0) {
-            val cellWidth = gridSize.width / columns
-            val cellHeight = gridSize.height / rows
+            val cellWidth = remember(gridSize.width, columns) { gridSize.width / columns }
+            val cellHeight = remember(gridSize.height, rows) { gridSize.height / rows }
 
             // Draw normal items
-            items.filter { it.id != dragDropState.draggedItem?.id }.forEach { item ->
-                val xOffset = item.position.column * cellWidth
-                val yOffset = item.position.row * cellHeight
+            val staticItems by remember(items, dragDropState.draggedItem) {
+                derivedStateOf { items.filter { it.id != dragDropState.draggedItem?.id } }
+            }
 
+            staticItems.forEach { item ->
+                val xOffset = remember(item.position.column, cellWidth) { item.position.column * cellWidth }
+                val yOffset = remember(item.position.row, cellHeight) { item.position.row * cellHeight }
                 val itemSize = if (item is LauncherItem.WidgetItem) item.size else WidgetSize(1, 1)
 
                 Box(
@@ -68,7 +72,6 @@ fun GridEngine(
                         isDragging = false,
                         onAppClick = onAppClick,
                         onWidgetResize = { widget, deltaX, deltaY ->
-                            // Convert pixel deltas to column/row deltas
                             val dxCols = (deltaX / cellWidth).roundToInt()
                             val dyRows = (deltaY / cellHeight).roundToInt()
                             if (dxCols != 0 || dyRows != 0) {

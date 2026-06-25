@@ -5,7 +5,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.eclipse.launcher.domain.TypographyStyle
+import com.eclipse.launcher.domain.model.TypographyStyle
 
 // Define default text styles based on Material 3 guidelines
 private val defaultDisplayLarge = TextStyle(
@@ -68,12 +68,12 @@ private val defaultBodySmall = TextStyle(
 fun getTypography(style: TypographyStyle): Typography {
     val displayFontFamily = when (style) {
         TypographyStyle.NDOT_EVERYWHERE, TypographyStyle.NDOT_WIDGETS_ONLY -> FontManager.NDotFontFamily
-        TypographyStyle.SYSTEM_FONT_ONLY -> FontFamily.Default
+        TypographyStyle.SYSTEM_FONT -> FontFamily.Default
     }
 
     val bodyFontFamily = when (style) {
         TypographyStyle.NDOT_EVERYWHERE -> FontManager.NDotFontFamily
-        TypographyStyle.NDOT_WIDGETS_ONLY, TypographyStyle.SYSTEM_FONT_ONLY -> FontFamily.Default
+        TypographyStyle.NDOT_WIDGETS_ONLY, TypographyStyle.SYSTEM_FONT -> FontFamily.Default
     }
 
     return Typography(

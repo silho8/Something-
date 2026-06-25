@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.eclipse.launcher.data.datastore.HomePreferences
 import com.eclipse.launcher.domain.model.DynamicThemeColors
 import com.eclipse.launcher.domain.model.IconStyle
+import com.eclipse.launcher.domain.model.TypographyStyle
 import com.eclipse.launcher.domain.repository.DynamicThemeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -33,7 +34,27 @@ class DynamicThemeViewModel @Inject constructor(
             initialValue = IconStyle.GLASS
         )
 
-    // Exposed so that settings menus can call it later
+    val typographyStyle: StateFlow<TypographyStyle> = homePreferences.getTypographyStyle()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = TypographyStyle.NDOT_WIDGETS_ONLY
+        )
+
+    val blurStrength: StateFlow<Float> = homePreferences.getBlurStrength()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = 25f
+        )
+
+    val glassDepth: StateFlow<Float> = homePreferences.getGlassDepth()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly,
+            initialValue = 0.4f
+        )
+
     fun setIconStyle(style: IconStyle) {
         viewModelScope.launch {
             homePreferences.saveIconStyle(style)

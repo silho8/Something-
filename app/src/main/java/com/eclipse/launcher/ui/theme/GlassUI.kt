@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.draw.blur
@@ -18,9 +19,6 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
-/**
- * Applies a basic glass-like appearance using background transparency and a subtle border.
- */
 fun Modifier.glassAppearance(
     backgroundColor: Color,
     transparency: Float,
@@ -32,10 +30,6 @@ fun Modifier.glassAppearance(
     .background(backgroundColor.copy(alpha = transparency))
     .border(borderWidth, borderColor, shape)
 
-/**
- * A reusable Glass Background composable.
- * Useful for large areas like the App Drawer background.
- */
 @Composable
 fun GlassBackground(
     modifier: Modifier = Modifier,
@@ -44,8 +38,9 @@ fun GlassBackground(
     blurIntensity: Dp = 30.dp,
     content: @Composable BoxScope.() -> Unit
 ) {
+    val tintedBg = remember(backgroundColor, transparency) { backgroundColor.copy(alpha = transparency) }
+
     Box(modifier = modifier) {
-        // The blurring layer
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             Box(
                 modifier = Modifier
@@ -54,21 +49,16 @@ fun GlassBackground(
             )
         }
 
-        // The frosted tint layer and content
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .background(backgroundColor.copy(alpha = transparency))
+                .background(tintedBg)
         ) {
             content()
         }
     }
 }
 
-/**
- * A reusable Glass Container.
- * Useful for circular or custom-shaped frosted elements like Folders.
- */
 @Composable
 fun GlassContainer(
     modifier: Modifier = Modifier,
@@ -80,6 +70,8 @@ fun GlassContainer(
     borderColor: Color = Color.White.copy(alpha = 0.2f),
     content: @Composable BoxScope.() -> Unit
 ) {
+    val tintedBg = remember(backgroundColor, transparency) { backgroundColor.copy(alpha = transparency) }
+
     Box(
         modifier = modifier
             .clip(shape)
@@ -96,17 +88,13 @@ fun GlassContainer(
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .background(backgroundColor.copy(alpha = transparency))
+                .background(tintedBg)
         )
 
         content()
     }
 }
 
-/**
- * A reusable Glass Card.
- * Useful for widgets or padded containers.
- */
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
@@ -117,9 +105,10 @@ fun GlassCard(
     contentPadding: Dp = 16.dp,
     content: @Composable BoxScope.() -> Unit
 ) {
+    val shape = remember(cornerRadius) { RoundedCornerShape(cornerRadius) }
     GlassContainer(
         modifier = modifier,
-        shape = RoundedCornerShape(cornerRadius),
+        shape = shape,
         backgroundColor = backgroundColor,
         transparency = transparency,
         blurIntensity = blurIntensity
